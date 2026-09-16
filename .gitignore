@@ -26,3 +26,4 @@ Thumbs.db
 .env
 application-local.properties
 application-secret.properties
+/.metadata/
