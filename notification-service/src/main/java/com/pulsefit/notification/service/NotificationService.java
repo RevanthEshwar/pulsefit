@@ -9,17 +9,31 @@ import com.pulsefit.notification.entity.Notification;
 import com.pulsefit.notification.repository.NotificationRepository;
 
 import com.pulsefit.notification.exception.NotificationNotFoundException;
+import com.pulsefit.notification.client.MemberClient;
+import com.pulsefit.notification.dto.MemberResponse;
+import feign.FeignException;
+import com.pulsefit.notification.exception.MemberNotFoundException;
 
 @Service
 public class NotificationService {
 
     private final NotificationRepository notificationRepository;
-
-    public NotificationService(NotificationRepository notificationRepository) {
-        this.notificationRepository = notificationRepository;
-    }
+    private final MemberClient memberClient;
+    
+    public NotificationService(NotificationRepository notificationRepository,
+            MemberClient memberClient) {
+this.notificationRepository = notificationRepository;
+this.memberClient = memberClient;
+}
 
     public Notification createNotification(Notification notification) {
+
+        try {
+            memberClient.getMemberById(notification.getMemberId());
+        } catch (FeignException.NotFound ex) {
+            throw new MemberNotFoundException(
+                    "Member not found: " + notification.getMemberId());
+        }
 
         if (notification.getCreatedAt() == null) {
             notification.setCreatedAt(LocalDateTime.now());

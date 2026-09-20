@@ -6,46 +6,65 @@ import static org.mockito.Mockito.*;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-import org.junit.jupiter.api.BeforeEach;
+
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+
 
 import com.pulsefit.attendance.entity.Attendance;
 import com.pulsefit.attendance.repository.AttendanceRepository;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.pulsefit.attendance.client.MemberClient;
+import com.pulsefit.attendance.client.FacilityClient;
+import com.pulsefit.attendance.dto.MemberResponse;
+import com.pulsefit.attendance.dto.FacilityResponse;
+
+import static org.mockito.ArgumentMatchers.anyLong;
+
+@ExtendWith(MockitoExtension.class)
 class AttendanceServiceTest {
 
-    @Mock
-    private AttendanceRepository attendanceRepository;
+	@Mock
+	private AttendanceRepository attendanceRepository;
 
-    @InjectMocks
-    private AttendanceService attendanceService;
+	@Mock
+	private MemberClient memberClient;
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-    }
+	@Mock
+	private FacilityClient facilityClient;
 
-    @Test
-    void checkIn_shouldSetCheckInTime() {
+	@InjectMocks
+	private AttendanceService attendanceService;
 
-        Attendance attendance = new Attendance();
-        attendance.setMemberId(1L);
-        attendance.setFacilityId(1L);
+   
 
-        when(attendanceRepository.save(any(Attendance.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+	@Test
+	void checkIn_shouldSetCheckInTime() {
 
-        Attendance result = attendanceService.checkIn(attendance);
+	    Attendance attendance = new Attendance();
+	    attendance.setMemberId(1L);
+	    attendance.setFacilityId(1L);
 
-        assertNotNull(result.getCheckInTime());
-        assertEquals(1L, result.getMemberId());
-        assertEquals(1L, result.getFacilityId());
+	    when(memberClient.getMemberById(anyLong()))
+	            .thenReturn(new MemberResponse());
 
-        verify(attendanceRepository).save(attendance);
-    }
+	    when(facilityClient.getFacilityById(anyLong()))
+	            .thenReturn(new FacilityResponse());
+
+	    when(attendanceRepository.save(any(Attendance.class)))
+	            .thenAnswer(invocation -> invocation.getArgument(0));
+
+	    Attendance result = attendanceService.checkIn(attendance);
+
+	    assertNotNull(result.getCheckInTime());
+	    assertEquals(1L, result.getMemberId());
+	    assertEquals(1L, result.getFacilityId());
+
+	    verify(attendanceRepository).save(attendance);
+	}
 
     @Test
     void checkIn_shouldKeepExistingCheckInTime() {

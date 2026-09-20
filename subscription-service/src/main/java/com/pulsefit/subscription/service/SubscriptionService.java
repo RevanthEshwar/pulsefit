@@ -8,30 +8,56 @@ import org.springframework.stereotype.Service;
 import com.pulsefit.subscription.entity.Subscription;
 import com.pulsefit.subscription.repository.SubscriptionRepository;
 
+import com.pulsefit.subscription.client.MemberClient;
+import com.pulsefit.subscription.client.NotificationClient;
+import com.pulsefit.subscription.dto.NotificationRequest;
+
 @Service
 public class SubscriptionService {
 
-    private final SubscriptionRepository subscriptionRepository;
+	private final SubscriptionRepository subscriptionRepository;
+	private final MemberClient memberClient;
+	private final NotificationClient notificationClient;
 
-    public SubscriptionService(SubscriptionRepository subscriptionRepository) {
-        this.subscriptionRepository = subscriptionRepository;
-    }
+	public SubscriptionService(SubscriptionRepository subscriptionRepository,
+            MemberClient memberClient,
+            NotificationClient notificationClient) {
+this.subscriptionRepository = subscriptionRepository;
+this.memberClient = memberClient;
+this.notificationClient = notificationClient;
+}
 
-    public Subscription createSubscription(Subscription subscription) {
-        if (subscription.getStartDate() == null) {
-            subscription.setStartDate(LocalDate.now());
-        }
+	public Subscription createSubscription(Subscription subscription) {
 
-        if (subscription.getStatus() == null) {
-            subscription.setStatus("ACTIVE");
-        }
+	    memberClient.getMemberById(subscription.getMemberId());
 
-        if (subscription.getPaymentStatus() == null) {
-            subscription.setPaymentStatus("PENDING");
-        }
+	    if (subscription.getStartDate() == null) {
+	        subscription.setStartDate(LocalDate.now());
+	    }
 
-        return subscriptionRepository.save(subscription);
-    }
+	    if (subscription.getStatus() == null) {
+	        subscription.setStatus("ACTIVE");
+	    }
+
+	    if (subscription.getPaymentStatus() == null) {
+	        subscription.setPaymentStatus("PENDING");
+	    }
+
+	    Subscription savedSubscription =
+	            subscriptionRepository.save(subscription);
+
+	    NotificationRequest notification = new NotificationRequest();
+
+	    notification.setMemberId(subscription.getMemberId());
+	    notification.setType("SUBSCRIPTION_CREATED");
+	    notification.setMessage(
+	            "Your PulseFit subscription has been created successfully.");
+	    notification.setStatus("PENDING");
+
+	    notificationClient.createNotification(notification);
+
+	    return savedSubscription;
+	}
 
     public List<Subscription> getAllSubscriptions() {
         return subscriptionRepository.findAll();
