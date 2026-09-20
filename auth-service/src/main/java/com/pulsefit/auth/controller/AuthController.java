@@ -33,6 +33,11 @@ public class AuthController {
         this.authService = authService;
     }
 
+    @GetMapping("/admin-test")
+    public ResponseEntity<String> adminTest() {
+        return ResponseEntity.ok("ADMIN authorization is working");
+    }
+
     @GetMapping("/test")
     public ResponseEntity<String> test() {
         return ResponseEntity.ok("JWT authentication is working");

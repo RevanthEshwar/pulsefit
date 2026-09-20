@@ -1,12 +1,15 @@
 package com.pulsefit.subscription.controller;
 
-import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.pulsefit.subscription.entity.Subscription;
+import com.pulsefit.subscription.exception.SubscriptionNotFoundException;
 import com.pulsefit.subscription.service.SubscriptionService;
 
 @RestController
@@ -15,10 +18,13 @@ public class SubscriptionController {
 
     private final SubscriptionService subscriptionService;
 
-    public SubscriptionController(SubscriptionService subscriptionService) {
+    public SubscriptionController(
+            SubscriptionService subscriptionService) {
+
         this.subscriptionService = subscriptionService;
     }
 
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     @PostMapping
     public ResponseEntity<Subscription> createSubscription(
             @RequestBody Subscription subscription) {
@@ -66,6 +72,7 @@ public class SubscriptionController {
                 subscriptionService.getSubscriptionsByStatus(status));
     }
 
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     @PutMapping("/{subscriptionId}")
     public ResponseEntity<Subscription> updateSubscription(
             @PathVariable Long subscriptionId,
@@ -76,6 +83,7 @@ public class SubscriptionController {
                         subscriptionId, subscription));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{subscriptionId}")
     public ResponseEntity<String> deleteSubscription(
             @PathVariable Long subscriptionId) {
@@ -84,5 +92,23 @@ public class SubscriptionController {
 
         return ResponseEntity.ok(
                 "Subscription deleted successfully");
+    }
+
+    @ExceptionHandler(SubscriptionNotFoundException.class)
+    public ResponseEntity<String> handleSubscriptionNotFound(
+            SubscriptionNotFoundException e) {
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(e.getMessage());
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<String> handleAccessDenied(
+            AccessDeniedException e) {
+
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(e.getMessage());
     }
 }

@@ -5,79 +5,92 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.pulsefit.subscription.entity.Subscription;
-import com.pulsefit.subscription.repository.SubscriptionRepository;
-
 import com.pulsefit.subscription.client.MemberClient;
 import com.pulsefit.subscription.client.NotificationClient;
 import com.pulsefit.subscription.dto.NotificationRequest;
+import com.pulsefit.subscription.entity.Subscription;
+import com.pulsefit.subscription.exception.SubscriptionNotFoundException;
+import com.pulsefit.subscription.repository.SubscriptionRepository;
 
 @Service
 public class SubscriptionService {
 
-	private final SubscriptionRepository subscriptionRepository;
-	private final MemberClient memberClient;
-	private final NotificationClient notificationClient;
+    private final SubscriptionRepository subscriptionRepository;
+    private final MemberClient memberClient;
+    private final NotificationClient notificationClient;
 
-	public SubscriptionService(SubscriptionRepository subscriptionRepository,
+    public SubscriptionService(
+            SubscriptionRepository subscriptionRepository,
             MemberClient memberClient,
             NotificationClient notificationClient) {
-this.subscriptionRepository = subscriptionRepository;
-this.memberClient = memberClient;
-this.notificationClient = notificationClient;
-}
 
-	public Subscription createSubscription(Subscription subscription) {
+        this.subscriptionRepository = subscriptionRepository;
+        this.memberClient = memberClient;
+        this.notificationClient = notificationClient;
+    }
 
-	    memberClient.getMemberById(subscription.getMemberId());
+    public Subscription createSubscription(
+            Subscription subscription) {
 
-	    if (subscription.getStartDate() == null) {
-	        subscription.setStartDate(LocalDate.now());
-	    }
+        memberClient.getMemberById(subscription.getMemberId());
 
-	    if (subscription.getStatus() == null) {
-	        subscription.setStatus("ACTIVE");
-	    }
+        if (subscription.getStartDate() == null) {
+            subscription.setStartDate(LocalDate.now());
+        }
 
-	    if (subscription.getPaymentStatus() == null) {
-	        subscription.setPaymentStatus("PENDING");
-	    }
+        if (subscription.getStatus() == null) {
+            subscription.setStatus("ACTIVE");
+        }
 
-	    Subscription savedSubscription =
-	            subscriptionRepository.save(subscription);
+        if (subscription.getPaymentStatus() == null) {
+            subscription.setPaymentStatus("PENDING");
+        }
 
-	    NotificationRequest notification = new NotificationRequest();
+        Subscription savedSubscription =
+                subscriptionRepository.save(subscription);
 
-	    notification.setMemberId(subscription.getMemberId());
-	    notification.setType("SUBSCRIPTION_CREATED");
-	    notification.setMessage(
-	            "Your PulseFit subscription has been created successfully.");
-	    notification.setStatus("PENDING");
+        NotificationRequest notification =
+                new NotificationRequest();
 
-	    notificationClient.createNotification(notification);
+        notification.setMemberId(subscription.getMemberId());
+        notification.setType("SUBSCRIPTION_CREATED");
+        notification.setMessage(
+                "Your PulseFit subscription has been created successfully.");
+        notification.setStatus("PENDING");
 
-	    return savedSubscription;
-	}
+        notificationClient.createNotification(notification);
+
+        return savedSubscription;
+    }
 
     public List<Subscription> getAllSubscriptions() {
         return subscriptionRepository.findAll();
     }
 
-    public Subscription getSubscriptionById(Long subscriptionId) {
+    public Subscription getSubscriptionById(
+            Long subscriptionId) {
+
         return subscriptionRepository.findById(subscriptionId)
                 .orElseThrow(() ->
-                        new RuntimeException("Subscription not found"));
+                        new SubscriptionNotFoundException(
+                                "Subscription not found"));
     }
 
-    public List<Subscription> getSubscriptionsByMember(Long memberId) {
+    public List<Subscription> getSubscriptionsByMember(
+            Long memberId) {
+
         return subscriptionRepository.findByMemberId(memberId);
     }
 
-    public List<Subscription> getSubscriptionsByPlan(Long planId) {
+    public List<Subscription> getSubscriptionsByPlan(
+            Long planId) {
+
         return subscriptionRepository.findByPlanId(planId);
     }
 
-    public List<Subscription> getSubscriptionsByStatus(String status) {
+    public List<Subscription> getSubscriptionsByStatus(
+            String status) {
+
         return subscriptionRepository.findByStatus(status);
     }
 
@@ -88,18 +101,32 @@ this.notificationClient = notificationClient;
         Subscription existingSubscription =
                 getSubscriptionById(subscriptionId);
 
-        existingSubscription.setMemberId(subscription.getMemberId());
-        existingSubscription.setPlanId(subscription.getPlanId());
-        existingSubscription.setStartDate(subscription.getStartDate());
-        existingSubscription.setEndDate(subscription.getEndDate());
-        existingSubscription.setStatus(subscription.getStatus());
-        existingSubscription.setPersonalTrainer(subscription.getPersonalTrainer());
-        existingSubscription.setPaymentStatus(subscription.getPaymentStatus());
+        existingSubscription.setMemberId(
+                subscription.getMemberId());
+
+        existingSubscription.setPlanId(
+                subscription.getPlanId());
+
+        existingSubscription.setStartDate(
+                subscription.getStartDate());
+
+        existingSubscription.setEndDate(
+                subscription.getEndDate());
+
+        existingSubscription.setStatus(
+                subscription.getStatus());
+
+        existingSubscription.setPersonalTrainer(
+                subscription.getPersonalTrainer());
+
+        existingSubscription.setPaymentStatus(
+                subscription.getPaymentStatus());
 
         return subscriptionRepository.save(existingSubscription);
     }
 
     public void deleteSubscription(Long subscriptionId) {
+
         Subscription subscription =
                 getSubscriptionById(subscriptionId);
 

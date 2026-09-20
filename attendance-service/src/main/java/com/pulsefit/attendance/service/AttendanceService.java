@@ -9,11 +9,12 @@ import com.pulsefit.attendance.entity.Attendance;
 import com.pulsefit.attendance.repository.AttendanceRepository;
 import com.pulsefit.attendance.client.MemberClient;
 import com.pulsefit.attendance.dto.MemberResponse;
-import feign.FeignException;
+
 
 import com.pulsefit.attendance.exception.MemberNotFoundException;
 import com.pulsefit.attendance.client.FacilityClient;
 import com.pulsefit.attendance.exception.FacilityNotFoundException;
+import com.pulsefit.attendance.exception.AttendanceNotFoundException;
 import feign.FeignException;
 @Service
 public class AttendanceService {
@@ -69,7 +70,8 @@ this.facilityClient = facilityClient;
 
         return attendanceRepository.findById(attendanceId)
                 .orElseThrow(() ->
-                        new RuntimeException("Attendance not found"));
+                        new AttendanceNotFoundException(
+                                "Attendance not found"));
     }
 
     public List<Attendance> getAttendanceByMember(Long memberId) {

@@ -4,11 +4,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.pulsefit.member.entity.Member;
 import com.pulsefit.member.exception.MemberNotFoundException;
 import com.pulsefit.member.repository.MemberRepository;
-
 @Service
 public class MemberService {
 
@@ -33,9 +35,31 @@ public class MemberService {
     }
 
     public Member getMemberById(Long memberId) {
-        return memberRepository.findById(memberId)
+
+        Member member = memberRepository.findById(memberId)
                 .orElseThrow(() ->
                         new MemberNotFoundException("Member not found"));
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        String username = authentication.getName();
+
+        boolean isStaff = authentication.getAuthorities()
+                .stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_STAFF"));
+
+        boolean isAdmin = authentication.getAuthorities()
+                .stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!isStaff && !isAdmin &&
+                !member.getUsername().equals(username)) {
+
+        	throw new AccessDeniedException("Access denied");
+        }
+
+        return member;
     }
 
     public Member getMemberByEmail(String email) {
@@ -45,7 +69,29 @@ public class MemberService {
     }
 
     public Member updateMember(Long memberId, Member member) {
-        Member existingMember = getMemberById(memberId);
+
+        Member existingMember = memberRepository.findById(memberId)
+                .orElseThrow(() ->
+                        new MemberNotFoundException("Member not found"));
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        String username = authentication.getName();
+
+        boolean isStaff = authentication.getAuthorities()
+                .stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_STAFF"));
+
+        boolean isAdmin = authentication.getAuthorities()
+                .stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!isStaff && !isAdmin &&
+                !existingMember.getUsername().equals(username)) {
+
+            throw new AccessDeniedException("Access denied");
+        }
 
         existingMember.setName(member.getName());
         existingMember.setEmail(member.getEmail());
@@ -54,7 +100,6 @@ public class MemberService {
 
         return memberRepository.save(existingMember);
     }
-
     public void deleteMember(Long memberId) {
         Member member = getMemberById(memberId);
         memberRepository.delete(member);
