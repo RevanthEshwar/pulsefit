@@ -2,14 +2,15 @@ package com.pulsefit.facility.controller;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.pulsefit.facility.entity.Facility;
-import com.pulsefit.facility.service.FacilityService;
-
-import org.springframework.http.HttpStatus;
 import com.pulsefit.facility.exception.FacilityNotFoundException;
+import com.pulsefit.facility.service.FacilityService;
 
 @RestController
 @RequestMapping("/api/facilities")
@@ -21,6 +22,7 @@ public class FacilityController {
         this.facilityService = facilityService;
     }
 
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     @PostMapping
     public ResponseEntity<Facility> createFacility(
             @RequestBody Facility facility) {
@@ -60,6 +62,7 @@ public class FacilityController {
                 facilityService.getByStatus(status));
     }
 
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     @PutMapping("/{facilityId}")
     public ResponseEntity<Facility> updateFacility(
             @PathVariable Long facilityId,
@@ -69,21 +72,32 @@ public class FacilityController {
                 facilityService.updateFacility(facilityId, facility));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{facilityId}")
     public ResponseEntity<String> deleteFacility(
             @PathVariable Long facilityId) {
 
         facilityService.deleteFacility(facilityId);
 
-        return ResponseEntity.ok("Facility deleted successfully");
+        return ResponseEntity.ok(
+                "Facility deleted successfully");
     }
-    
+
     @ExceptionHandler(FacilityNotFoundException.class)
     public ResponseEntity<String> handleFacilityNotFound(
             FacilityNotFoundException e) {
 
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
+                .body(e.getMessage());
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<String> handleAccessDenied(
+            AccessDeniedException e) {
+
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
                 .body(e.getMessage());
     }
 }

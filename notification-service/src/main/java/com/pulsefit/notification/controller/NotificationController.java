@@ -3,6 +3,7 @@ package com.pulsefit.notification.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.pulsefit.notification.entity.Notification;
@@ -18,6 +19,7 @@ public class NotificationController {
         this.notificationService = notificationService;
     }
 
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN')")
     @PostMapping
     public ResponseEntity<Notification> createNotification(
             @RequestBody Notification notification) {
@@ -26,6 +28,7 @@ public class NotificationController {
                 notificationService.createNotification(notification));
     }
 
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN')")
     @GetMapping
     public ResponseEntity<List<Notification>> getAllNotifications() {
 
@@ -49,6 +52,7 @@ public class NotificationController {
                 notificationService.getNotificationsByMember(memberId));
     }
 
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN')")
     @GetMapping("/status/{status}")
     public ResponseEntity<List<Notification>> getNotificationsByStatus(
             @PathVariable String status) {
@@ -57,6 +61,7 @@ public class NotificationController {
                 notificationService.getNotificationsByStatus(status));
     }
 
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN')")
     @GetMapping("/type/{type}")
     public ResponseEntity<List<Notification>> getNotificationsByType(
             @PathVariable String type) {
@@ -65,6 +70,7 @@ public class NotificationController {
                 notificationService.getNotificationsByType(type));
     }
 
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN')")
     @PutMapping("/{notificationId}/send")
     public ResponseEntity<Notification> markAsSent(
             @PathVariable Long notificationId) {
@@ -73,6 +79,7 @@ public class NotificationController {
                 notificationService.markAsSent(notificationId));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{notificationId}")
     public ResponseEntity<String> deleteNotification(
             @PathVariable Long notificationId) {

@@ -1,14 +1,15 @@
-package com.pulsefit.auth.security;
+package com.pulsefit.notification.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -22,34 +23,23 @@ public class SecurityConfig {
             throws Exception {
 
         http
-            .csrf(AbstractHttpConfigurer::disable)
+            .csrf(csrf -> csrf.disable())
 
             .sessionManagement(session ->
                 session.sessionCreationPolicy(
-                    SessionCreationPolicy.STATELESS
-                )
-            )
+                    SessionCreationPolicy.STATELESS))
 
             .authorizeHttpRequests(auth ->
-                auth
-                    .requestMatchers(
-                        "/api/auth/register",
-                        "/api/auth/login"
-                    ).permitAll()
+                auth.anyRequest().authenticated())
 
-                    .requestMatchers("/api/auth/admin-test")
-                    .hasRole("ADMIN")
-
-                    .requestMatchers("/api/auth/test")
-                    .hasAnyRole("USER", "STAFF", "ADMIN")
-
-                    .anyRequest().authenticated()
-            )
+            .exceptionHandling(exception ->
+                exception.authenticationEntryPoint(
+                    (request, response, authException) ->
+                        response.setStatus(401)))
 
             .addFilterBefore(
                 jwtAuthenticationFilter,
-                UsernamePasswordAuthenticationFilter.class
-            );
+                UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

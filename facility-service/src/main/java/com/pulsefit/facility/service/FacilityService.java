@@ -5,9 +5,8 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.pulsefit.facility.entity.Facility;
-import com.pulsefit.facility.repository.FacilityRepository;
-
 import com.pulsefit.facility.exception.FacilityNotFoundException;
+import com.pulsefit.facility.repository.FacilityRepository;
 
 @Service
 public class FacilityService {
@@ -29,31 +28,52 @@ public class FacilityService {
     public Facility getFacilityById(Long facilityId) {
         return facilityRepository.findById(facilityId)
                 .orElseThrow(() ->
-                        new FacilityNotFoundException("Facility not found"));
+                        new FacilityNotFoundException(
+                                "Facility not found"));
     }
+
     public List<Facility> searchByLocation(String location) {
-        return facilityRepository.findByLocationContainingIgnoreCase(location);
+        return facilityRepository
+                .findByLocationContainingIgnoreCase(location);
     }
 
     public List<Facility> getByStatus(String status) {
         return facilityRepository.findByStatus(status);
     }
 
-    public Facility updateFacility(Long facilityId, Facility facility) {
-        Facility existingFacility = getFacilityById(facilityId);
+    public Facility updateFacility(
+            Long facilityId,
+            Facility facility) {
 
-        existingFacility.setFacilityName(facility.getFacilityName());
-        existingFacility.setLocation(facility.getLocation());
-        existingFacility.setContact(facility.getContact());
-        existingFacility.setOperatingHours(facility.getOperatingHours());
-        existingFacility.setCapacity(facility.getCapacity());
-        existingFacility.setStatus(facility.getStatus());
+        Facility existingFacility =
+                getFacilityById(facilityId);
+
+        existingFacility.setFacilityName(
+                facility.getFacilityName());
+
+        existingFacility.setLocation(
+                facility.getLocation());
+
+        existingFacility.setContact(
+                facility.getContact());
+
+        existingFacility.setOperatingHours(
+                facility.getOperatingHours());
+
+        existingFacility.setCapacity(
+                facility.getCapacity());
+
+        existingFacility.setStatus(
+                facility.getStatus());
 
         return facilityRepository.save(existingFacility);
     }
 
     public void deleteFacility(Long facilityId) {
-        Facility facility = getFacilityById(facilityId);
+
+        Facility facility =
+                getFacilityById(facilityId);
+
         facilityRepository.delete(facility);
     }
 }
