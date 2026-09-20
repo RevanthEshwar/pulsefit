@@ -17,12 +17,19 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.pulsefit.notification.entity.Notification;
 import com.pulsefit.notification.repository.NotificationRepository;
+import com.pulsefit.notification.client.MemberClient;
+import com.pulsefit.notification.dto.MemberResponse;
+
+import static org.mockito.ArgumentMatchers.anyLong;
 
 @ExtendWith(MockitoExtension.class)
 class NotificationServiceTest {
 
     @Mock
     private NotificationRepository notificationRepository;
+    
+    @Mock
+    private MemberClient memberClient;
 
     @InjectMocks
     private NotificationService notificationService;
@@ -45,6 +52,9 @@ class NotificationServiceTest {
 
     @Test
     void createNotificationTest() {
+
+        when(memberClient.getMemberById(anyLong()))
+                .thenReturn(new MemberResponse());
 
         when(notificationRepository.save(notification))
                 .thenReturn(notification);

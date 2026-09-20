@@ -14,19 +14,34 @@ import org.mockito.MockitoAnnotations;
 
 import com.pulsefit.subscription.entity.Subscription;
 import com.pulsefit.subscription.repository.SubscriptionRepository;
+import com.pulsefit.subscription.client.MemberClient;
+import com.pulsefit.subscription.client.NotificationClient;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.junit.jupiter.api.BeforeEach;
+import org.mockito.MockitoAnnotations;
+import com.pulsefit.subscription.dto.MemberResponse;
+import com.pulsefit.subscription.dto.NotificationRequest;
 
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.any;
+
+@ExtendWith(MockitoExtension.class)
 class SubscriptionServiceTest {
 
+	
+	@Mock
+	private MemberClient memberClient;
+
+	@Mock
+	private NotificationClient notificationClient;
     @Mock
     private SubscriptionRepository subscriptionRepository;
 
     @InjectMocks
     private SubscriptionService subscriptionService;
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-    }
+   
 
     @Test
     void createSubscription_shouldSetDefaultValues() {
@@ -35,6 +50,12 @@ class SubscriptionServiceTest {
         subscription.setMemberId(1L);
         subscription.setPlanId(1L);
         subscription.setEndDate(LocalDate.of(2027, 3, 17));
+
+        when(memberClient.getMemberById(anyLong()))
+                .thenReturn(new MemberResponse());
+
+        doNothing().when(notificationClient)
+                .createNotification(any(NotificationRequest.class));
 
         when(subscriptionRepository.save(any(Subscription.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));

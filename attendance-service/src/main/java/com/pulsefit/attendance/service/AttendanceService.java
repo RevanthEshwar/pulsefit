@@ -7,25 +7,51 @@ import org.springframework.stereotype.Service;
 
 import com.pulsefit.attendance.entity.Attendance;
 import com.pulsefit.attendance.repository.AttendanceRepository;
+import com.pulsefit.attendance.client.MemberClient;
+import com.pulsefit.attendance.dto.MemberResponse;
+import feign.FeignException;
 
+import com.pulsefit.attendance.exception.MemberNotFoundException;
+import com.pulsefit.attendance.client.FacilityClient;
+import com.pulsefit.attendance.exception.FacilityNotFoundException;
+import feign.FeignException;
 @Service
 public class AttendanceService {
 
-    private final AttendanceRepository attendanceRepository;
+	private final AttendanceRepository attendanceRepository;
+	private final MemberClient memberClient;
+	private final FacilityClient facilityClient;
 
-    public AttendanceService(AttendanceRepository attendanceRepository) {
-        this.attendanceRepository = attendanceRepository;
-    }
+	public AttendanceService(AttendanceRepository attendanceRepository,
+            MemberClient memberClient,
+            FacilityClient facilityClient) {
+this.attendanceRepository = attendanceRepository;
+this.memberClient = memberClient;
+this.facilityClient = facilityClient;
+}
 
-    public Attendance checkIn(Attendance attendance) {
+	public Attendance checkIn(Attendance attendance) {
 
-        if (attendance.getCheckInTime() == null) {
-            attendance.setCheckInTime(LocalDateTime.now());
-        }
+	    try {
+	        memberClient.getMemberById(attendance.getMemberId());
+	    } catch (FeignException.NotFound ex) {
+	        throw new MemberNotFoundException(
+	                "Member not found: " + attendance.getMemberId());
+	    }
 
-        return attendanceRepository.save(attendance);
-    }
+	    try {
+	        facilityClient.getFacilityById(attendance.getFacilityId());
+	    } catch (FeignException.NotFound ex) {
+	        throw new FacilityNotFoundException(
+	                "Facility not found: " + attendance.getFacilityId());
+	    }
 
+	    if (attendance.getCheckInTime() == null) {
+	        attendance.setCheckInTime(LocalDateTime.now());
+	    }
+
+	    return attendanceRepository.save(attendance);
+	}
     public Attendance checkOut(Long attendanceId) {
 
         Attendance attendance = getAttendanceById(attendanceId);
