@@ -8,7 +8,9 @@ import com.pulsefit.member.entity.Member;
 
 public interface MemberRepository extends JpaRepository<Member, Long> {
 
+    boolean existsByEmail(String email);
+
     Optional<Member> findByEmail(String email);
 
-    boolean existsByEmail(String email);
+    Optional<Member> findByUsername(String username);
 }

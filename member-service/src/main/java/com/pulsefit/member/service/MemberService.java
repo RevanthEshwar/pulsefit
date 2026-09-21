@@ -61,6 +61,13 @@ public class MemberService {
 
         return member;
     }
+    
+    public Member getMemberByUsername(String username) {
+
+        return memberRepository.findByUsername(username)
+                .orElseThrow(() ->
+                        new MemberNotFoundException("Member not found"));
+    }
 
     public Member getMemberByEmail(String email) {
         return memberRepository.findByEmail(email)

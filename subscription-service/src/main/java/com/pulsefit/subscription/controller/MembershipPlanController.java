@@ -3,6 +3,7 @@ package com.pulsefit.subscription.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.pulsefit.subscription.entity.MembershipPlan;
@@ -19,6 +20,7 @@ public class MembershipPlanController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     public ResponseEntity<MembershipPlan> createPlan(
             @RequestBody MembershipPlan plan) {
 
@@ -50,6 +52,7 @@ public class MembershipPlanController {
     }
 
     @PutMapping("/{planId}")
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     public ResponseEntity<MembershipPlan> updatePlan(
             @PathVariable Long planId,
             @RequestBody MembershipPlan plan) {
@@ -59,6 +62,7 @@ public class MembershipPlanController {
     }
 
     @DeleteMapping("/{planId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> deletePlan(
             @PathVariable Long planId) {
 

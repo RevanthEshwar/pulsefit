@@ -40,6 +40,14 @@ public class MemberController {
     public ResponseEntity<List<Member>> getAllMembers() {
         return ResponseEntity.ok(memberService.getAllMembers());
     }
+    
+    @GetMapping("/username/{username}")
+    public ResponseEntity<Member> getMemberByUsername(
+            @PathVariable String username) {
+
+        return ResponseEntity.ok(
+                memberService.getMemberByUsername(username));
+    }
 
     @GetMapping("/{memberId}")
     public ResponseEntity<Member> getMemberById(@PathVariable Long memberId) {

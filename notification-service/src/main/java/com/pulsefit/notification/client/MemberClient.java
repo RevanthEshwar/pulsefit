@@ -16,4 +16,8 @@ public interface MemberClient {
     @GetMapping("/api/members/{memberId}")
     MemberResponse getMemberById(
             @PathVariable("memberId") Long memberId);
+
+    @GetMapping("/api/members/username/{username}")
+    MemberResponse getMemberByUsername(
+            @PathVariable("username") String username);
 }

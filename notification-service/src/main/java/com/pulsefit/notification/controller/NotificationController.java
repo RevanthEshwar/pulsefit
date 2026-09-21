@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import com.pulsefit.notification.entity.Notification;
@@ -38,18 +39,22 @@ public class NotificationController {
 
     @GetMapping("/{notificationId}")
     public ResponseEntity<Notification> getNotificationById(
-            @PathVariable Long notificationId) {
+            @PathVariable Long notificationId,
+            Authentication authentication) {
 
         return ResponseEntity.ok(
-                notificationService.getNotificationById(notificationId));
+                notificationService.getNotificationById(
+                        notificationId, authentication));
     }
 
     @GetMapping("/member/{memberId}")
     public ResponseEntity<List<Notification>> getNotificationsByMember(
-            @PathVariable Long memberId) {
+            @PathVariable Long memberId,
+            Authentication authentication) {
 
         return ResponseEntity.ok(
-                notificationService.getNotificationsByMember(memberId));
+                notificationService.getNotificationsByMember(
+                        memberId, authentication));
     }
 
     @PreAuthorize("hasAnyRole('STAFF','ADMIN')")
