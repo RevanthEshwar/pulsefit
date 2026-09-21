@@ -5,6 +5,7 @@ import static org.mockito.Mockito.*;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,6 +15,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import com.pulsefit.notification.entity.Notification;
 import com.pulsefit.notification.repository.NotificationRepository;
@@ -27,9 +30,12 @@ class NotificationServiceTest {
 
     @Mock
     private NotificationRepository notificationRepository;
-    
+
     @Mock
     private MemberClient memberClient;
+
+    @Mock
+    private Authentication authentication;
 
     @InjectMocks
     private NotificationService notificationService;
@@ -38,6 +44,7 @@ class NotificationServiceTest {
 
     @BeforeEach
     void setUp() {
+
         notification = new Notification(
                 1L,
                 "EXPIRY",
@@ -48,6 +55,7 @@ class NotificationServiceTest {
         );
 
         notification.setNotificationId(1L);
+        notification.setMemberId(1L);
     }
 
     @Test
@@ -67,7 +75,8 @@ class NotificationServiceTest {
         assertEquals("EXPIRY", result.getType());
         assertEquals("PENDING", result.getStatus());
 
-        verify(notificationRepository, times(1)).save(notification);
+        verify(notificationRepository, times(1))
+                .save(notification);
     }
 
     @Test
@@ -82,7 +91,8 @@ class NotificationServiceTest {
         assertEquals(1, result.size());
         assertEquals("EXPIRY", result.get(0).getType());
 
-        verify(notificationRepository, times(1)).findAll();
+        verify(notificationRepository, times(1))
+                .findAll();
     }
 
     @Test
@@ -91,13 +101,34 @@ class NotificationServiceTest {
         when(notificationRepository.findById(1L))
                 .thenReturn(Optional.of(notification));
 
+        when(authentication.getAuthorities())
+                .thenAnswer(invocation ->
+                        Collections.singleton(
+                                new SimpleGrantedAuthority("ROLE_USER")));
+
+        when(authentication.getName())
+                .thenReturn("memberuser");
+
+        MemberResponse memberResponse = new MemberResponse();
+        memberResponse.setMemberId(1L);
+
+        when(memberClient.getMemberByUsername("memberuser"))
+                .thenReturn(memberResponse);
+
         Notification result =
-                notificationService.getNotificationById(1L);
+                notificationService.getNotificationById(
+                        1L,
+                        authentication
+                );
 
         assertNotNull(result);
         assertEquals(1L, result.getNotificationId());
 
-        verify(notificationRepository, times(1)).findById(1L);
+        verify(notificationRepository, times(1))
+                .findById(1L);
+
+        verify(memberClient, times(1))
+                .getMemberByUsername("memberuser");
     }
 
     @Test
@@ -108,25 +139,52 @@ class NotificationServiceTest {
 
         RuntimeException exception = assertThrows(
                 RuntimeException.class,
-                () -> notificationService.getNotificationById(999L)
+                () -> notificationService.getNotificationById(
+                        999L,
+                        authentication
+                )
         );
 
-        assertEquals("Notification not found", exception.getMessage());
+        assertEquals(
+                "Notification not found",
+                exception.getMessage()
+        );
 
-        verify(notificationRepository, times(1)).findById(999L);
+        verify(notificationRepository, times(1))
+                .findById(999L);
     }
 
     @Test
     void getNotificationsByMemberTest() {
 
+        when(authentication.getAuthorities())
+                .thenAnswer(invocation ->
+                        Collections.singleton(
+                                new SimpleGrantedAuthority("ROLE_USER")));
+
+        when(authentication.getName())
+                .thenReturn("memberuser");
+
+        MemberResponse memberResponse = new MemberResponse();
+        memberResponse.setMemberId(1L);
+
+        when(memberClient.getMemberByUsername("memberuser"))
+                .thenReturn(memberResponse);
+
         when(notificationRepository.findByMemberId(1L))
                 .thenReturn(Arrays.asList(notification));
 
         List<Notification> result =
-                notificationService.getNotificationsByMember(1L);
+                notificationService.getNotificationsByMember(
+                        1L,
+                        authentication
+                );
 
         assertEquals(1, result.size());
         assertEquals(1L, result.get(0).getMemberId());
+
+        verify(memberClient, times(1))
+                .getMemberByUsername("memberuser");
 
         verify(notificationRepository, times(1))
                 .findByMemberId(1L);
