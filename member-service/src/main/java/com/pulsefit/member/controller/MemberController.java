@@ -24,16 +24,34 @@ public class MemberController {
         this.memberService = memberService;
     }
 
-    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
-    @PostMapping
-    public ResponseEntity<Member> createMember(
-            @RequestBody Member member,
-            Authentication authentication) {
 
+@PreAuthorize("hasAnyRole('USER', 'STAFF', 'ADMIN')")
+@PostMapping
+public ResponseEntity<Member> createMember(
+        @RequestBody Member member,
+        Authentication authentication) {
+
+    boolean isStaffOrAdmin = authentication.getAuthorities()
+            .stream()
+            .anyMatch(authority ->
+                    authority.getAuthority().equals("ROLE_STAFF")
+                    || authority.getAuthority().equals("ROLE_ADMIN"));
+
+    if (isStaffOrAdmin) {
+        if (member.getUsername() == null
+                || member.getUsername().isBlank()) {
+            throw new IllegalArgumentException(
+                    "Username is required for member creation");
+        }
+    } else {
+        // Regular users can create profiles only for themselves
         member.setUsername(authentication.getName());
-
-        return ResponseEntity.ok(memberService.createMember(member));
     }
+
+    return ResponseEntity.status(HttpStatus.CREATED)
+            .body(memberService.createMember(member));
+}
+
 
     @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     @GetMapping

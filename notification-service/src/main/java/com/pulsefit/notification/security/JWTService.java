@@ -28,12 +28,19 @@ public class JWTService {
 
     public boolean isTokenValid(String token) {
         try {
-            getClaims(token);
+            Claims claims = getClaims(token);
+            System.out.println("Notification JWT valid. Subject: "
+                    + claims.getSubject());
             return true;
         } catch (Exception e) {
+            System.err.println("Notification JWT error: "
+                    + e.getClass().getName()
+                    + " - " + e.getMessage());
+            e.printStackTrace();
             return false;
         }
     }
+
 
     private Claims getClaims(String token) {
         return Jwts.parser()
