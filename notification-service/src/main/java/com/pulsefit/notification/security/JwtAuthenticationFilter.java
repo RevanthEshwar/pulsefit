@@ -61,6 +61,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             SecurityContextHolder
                     .getContext()
                     .setAuthentication(authentication);
+            
+            System.out.println("Notification SecurityContext user: "
+                    + SecurityContextHolder.getContext()
+                            .getAuthentication().getName());
         }
 
         filterChain.doFilter(request, response);
